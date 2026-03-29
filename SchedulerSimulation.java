@@ -3,7 +3,7 @@ import java.util.Queue;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Random;
-
+import java.util.*;
 // ANSI Color Codes for enhanced terminal output
 class Colors {
     public static final String RESET = "\u001B[0m";
@@ -29,18 +29,23 @@ class Process implements Runnable {
     private int burstTime; // Total time the process requires to complete (in milliseconds)
     private int timeQuantum; // Time slice (time quantum) allowed per CPU access (in milliseconds)
     private int remainingTime; // Time left for the process to finish its execution
-
+    public int priority; // priority field 
+    public long startTime; // وقت بدء التنفيذ
+    public int waitingTime; // وقت الانتظار 
     // Constructor to initialize the process with name, burst time, and time quantum
     public Process(String name, int burstTime, int timeQuantum) {
         this.name = name;
         this.burstTime = burstTime;
         this.timeQuantum = timeQuantum;
         this.remainingTime = burstTime; // Initially, remaining time is equal to the burst time
+        this.priority = (int) (Math.random()*5)+1;
+        this.startTime = System.currentTimeMillis();
     }
 
     // This method will be called when the thread for this process is started
     @Override
     public void run() {
+        waitingTime = (int) (System.currentTimeMillis() - startTime); 
         // Simulate running for either the time quantum or remaining time, whichever is smaller
         int runTime = Math.min(timeQuantum, remainingTime); // Run for the smaller of the two times
         
@@ -90,6 +95,7 @@ class Process implements Runnable {
                               Colors.RESET);
         }
         System.out.println();
+        System.out.println("Waiting time for " + name + ": " + waitingTime + "ms");
     }
     
     // Helper method to create a visual progress bar
@@ -144,6 +150,7 @@ class Process implements Runnable {
 }
 
 public class SchedulerSimulation {
+    private static int contextSwitchCount = 0;  // متغير ثابت لحساب التحولات بين العمليات
     public static void main(String[] args) {
         // ⚠️ IMPORTANT: Put your student ID here to seed the random number generator
         // This makes your output unique to you - DO NOT forget to change this!
@@ -163,6 +170,7 @@ public class SchedulerSimulation {
         
         // Map to associate each thread with its respective process object
         Map<Thread, Process> processMap = new HashMap<>();
+        List<Process> allProcesses = new ArrayList<>();
         
         // Print simulation header with elegant formatting
         System.out.println("\n" + Colors.BOLD + Colors.BRIGHT_CYAN + 
@@ -198,7 +206,7 @@ public class SchedulerSimulation {
             
             // Create a new process object with a unique name, burst time, and the defined time quantum
             Process process = new Process("P" + i, burstTime, timeQuantum);
-            
+            allProcesses.add(process);
             // Add the process to the ready queue and the map
             addProcessToQueue(process, processQueue, processMap);
         }
@@ -238,6 +246,7 @@ public class SchedulerSimulation {
             
             // Start the thread, which will run the process for one time quantum
             currentThread.start();
+            contextSwitchCount++;  // زيادة عداد التحولات عند بدء كل عملية
             
             try {
                 // Wait for the thread to finish its time quantum before continuing to the next process
@@ -264,6 +273,16 @@ public class SchedulerSimulation {
                 }
             }
         }
+        System.out.println("\nProcess Name | Burst Time | Waiting Time");
+        for (Process p : allProcesses) {
+            System.out.println(p.getName() + " | " + p.getBurstTime() + " | " + p.waitingTime);
+        }
+        //  طباعة وقت الانتظار لكل عملية
+        System.out.println("\n" + Colors.BOLD + Colors.CYAN + "Process Name | Waiting Time (ms)" + Colors.RESET);
+        for (Thread thread : processQueue) {
+        Process process = processMap.get(thread);
+        System.out.println(process.getName() + " | Waiting time: " + process.waitingTime + " ms");
+}
         
         // End of the scheduler simulation
         System.out.println(Colors.BOLD + Colors.BRIGHT_GREEN + 
@@ -276,11 +295,11 @@ public class SchedulerSimulation {
         System.out.println(Colors.BOLD + Colors.BRIGHT_GREEN + 
                           "╚════════════════════════════════════════════════════════════════════════════════╝" + 
                           Colors.RESET + "\n");
-    }
+        System.out.println("Total context switches: " + contextSwitchCount);  // طباعة عدد التحولات     
+        }
     
     // Method to add a process to the queue and map, while printing a "ready" message
-    public static void addProcessToQueue(Process process, Queue<Thread> processQueue, 
-                                        Map<Thread, Process> processMap) {
+    public static void addProcessToQueue(Process process, Queue<Thread> processQueue, Map<Thread, Process> processMap) {
         // Create a new thread to run the process
         Thread thread = new Thread(process);
         
@@ -291,9 +310,9 @@ public class SchedulerSimulation {
         processMap.put(thread, process);
         
         // Print a message indicating the process has entered the ready queue
-        System.out.println(Colors.BLUE + "  ➕ " + Colors.BOLD + Colors.CYAN + process.getName() + 
-                          Colors.RESET + Colors.BLUE + " added to ready queue" + Colors.RESET + 
-                          " │ Burst time: " + Colors.YELLOW + process.getBurstTime() + "ms" + 
-                          Colors.RESET);
+        System.out.println(Colors.BLUE + " ➕ " + Colors.BOLD + Colors.CYAN + process.getName() + 
+                   Colors.RESET + Colors.BLUE + " added to ready queue" + Colors.RESET + 
+                   " │ Burst time: " + Colors.YELLOW + process.getBurstTime() + "ms" + 
+                   Colors.RESET + " | Priority: " + process.priority + " enters the ready queue...");                  
     }
 }
