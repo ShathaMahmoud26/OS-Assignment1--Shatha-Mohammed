@@ -1,3 +1,5 @@
+Assignment video: https://drive.google.com/file/d/17BEE7sUUTOkI29IraJsgkBxAW_miytSR/view?usp=drive_link
+
 # CS3701 Operating Systems - Assignment 1: Multithreading
 ## Round-Robin CPU Scheduler Simulation
 
