@@ -273,7 +273,7 @@ public class SchedulerSimulation {
                 }
             }
         }
-        System.out.println("\nProcess Name | Burst Time | Waiting Time");
+        System.out.println("\nProcess Name | Burst Time | Waiting Time"); // جدول للعمليات
         for (Process p : allProcesses) {
             System.out.println(p.getName() + " | " + p.getBurstTime() + " | " + p.waitingTime);
         }
